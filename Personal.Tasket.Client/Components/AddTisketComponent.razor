@@ -1,28 +1,43 @@
 ﻿@inject TasketState TasketState;
 
 
-<EditForm Model = "FormTisket" OnValidSubmit="SubmitForm">
-	<InputText placeholder="Tisket" @bind-Value="FormTisket.Title" />
-	<ValidationMessage For="@(() => FormTisket.Title)" />
+<EditForm Model = "tisket" OnValidSubmit="OnAdd">
+	<InputText placeholder="Tisket" @bind-Value="tisket.Title" />
+	<ValidationMessage For="@(() => tisket.Title)" />
 
-	<InputText placeholder="Description (optional)" @bind-Value="FormTisket.Description" />
-	<ValidationMessage For="@(() => FormTisket.Description)" />
+	<InputText placeholder="Description (optional)" @bind-Value="tisket.Description" />
+	<ValidationMessage For="@(() => tisket.Description)" />
 
 	<button type="submit">Add</button>
-	<p><ValidationSummary /></p>
+
+	<DataAnnotationsValidator />
 </EditForm>
+<div>
+	<input type="text" placeholder="Number of rows to load." @bind-value="rows"/>
+	<button type="button" @onclick="(() => OnAdd(rows))">Load Dummy Data</button>
+</div>
 
 @code {
-	[Parameter] public EventCallback<TisketModel> NotifyOnAdd { get; set; }
-	public TisketModel FormTisket { get; set; } = new();
+	[Parameter] public EventCallback NotifyOnAdd { get; set; }
+	public TisketModel tisket { get; set; } = new();
 
-	private async void SubmitForm()
+	private string? rows = null;
+
+	private async void OnAdd()
 	{
-		await TasketState.AddFormTisket(FormTisket);
+
+		await TasketState.AddFormTisket(tisket);
 		TasketState.ResetTisket();
-		FormTisket = new();
+		tisket = new();
 		await NotifyOnAdd.InvokeAsync();
 	}
 
-	// todo - fix validation
+	private async void OnAdd(string addRows)
+	{
+		if (rows != null && Int32.Parse(rows) != 0)
+		{
+			TasketState.LoadDummyData(Int32.Parse(addRows));
+			await NotifyOnAdd.InvokeAsync();
+		}
+	}
 }

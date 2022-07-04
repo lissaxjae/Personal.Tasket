@@ -6,8 +6,6 @@
 
 <AddTisketComponent NotifyOnAdd="StateHasChanged"/>
 <p>
-	<input type="text" placeholder="Number of rows to load." @bind-value="rows"/>
-	<button type="button" @onclick="(() => TasketState.LoadDummyData(Int32.Parse(rows)))">Load Dummy Data</button>
 	<button type="button" @onclick="TasketState.EmptyTasket">Delete All Data</button>
 </p>
 
@@ -41,7 +39,5 @@ else
 }
 
 @code {
-	private string? rows = null;
-
 	[Parameter] public string Slogan { get; set; } = "";
 }
