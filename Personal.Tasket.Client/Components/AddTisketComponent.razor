@@ -1,0 +1,28 @@
+﻿@inject TasketState TasketState;
+
+
+<EditForm Model = "FormTisket" OnValidSubmit="SubmitForm">
+	<InputText placeholder="Tisket" @bind-Value="FormTisket.Title" />
+	<ValidationMessage For="@(() => FormTisket.Title)" />
+
+	<InputText placeholder="Description (optional)" @bind-Value="FormTisket.Description" />
+	<ValidationMessage For="@(() => FormTisket.Description)" />
+
+	<button type="submit">Add</button>
+	<p><ValidationSummary /></p>
+</EditForm>
+
+@code {
+	[Parameter] public EventCallback<TisketModel> NotifyOnAdd { get; set; }
+	public TisketModel FormTisket { get; set; } = new();
+
+	private async void SubmitForm()
+	{
+		await TasketState.AddFormTisket(FormTisket);
+		TasketState.ResetTisket();
+		FormTisket = new();
+		await NotifyOnAdd.InvokeAsync();
+	}
+
+	// todo - fix validation
+}

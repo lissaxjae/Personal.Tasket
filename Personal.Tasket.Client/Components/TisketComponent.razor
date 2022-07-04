@@ -1,0 +1,29 @@
+﻿@inject ILogger<TisketComponent> _logger;
+@inject TasketState TasketState;
+<tr>
+	<td>@Tisket.Id</td>
+	<td>@Tisket.Title</td>
+	<td>@Tisket.Description</td>
+	<td>@Tisket.WhenAdded</td>
+	<td>@Tisket.WhenCompleted</td>
+	<td><a href="#" @onclick="CompleteTisket" @onclick:preventDefault>Mark Complete</a> | <a href="#" @onclick="DeleteTisket" @onclick:preventDefault>Delete</a></td>
+</tr>
+
+@code {
+	[Parameter] public TisketModel Tisket { get; set; } = new();
+
+	[Parameter]public EventCallback NotifyOnDelete { get; set; }
+
+	private async void DeleteTisket()
+	{
+		await TasketState.DeleteTisket(Tisket);
+		await NotifyOnDelete.InvokeAsync();
+	}
+
+	private async void CompleteTisket()
+	{
+		await TasketState.CompleteTisket(Tisket);
+	}
+
+	// note - why does DeleteTisket require event invoking, but CompleteTisket does not?
+}

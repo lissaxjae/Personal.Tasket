@@ -1,0 +1,47 @@
+﻿@inject ILogger<TasketComponent> _logger;
+@inject HttpClient Http;
+@inject TasketState TasketState;
+
+<p>@Slogan</p>
+
+<AddTisketComponent NotifyOnAdd="StateHasChanged"/>
+<p>
+	<input type="text" placeholder="Number of rows to load." @bind-value="rows"/>
+	<button type="button" @onclick="(() => TasketState.LoadDummyData(Int32.Parse(rows)))">Load Dummy Data</button>
+	<button type="button" @onclick="TasketState.EmptyTasket">Delete All Data</button>
+</p>
+
+@if (TasketState.Tasket.Count == 0)
+{
+	<p>Your tasket is empty.</p>
+}
+else
+{
+	<table class="table table-striped">
+		<thead>
+			<tr>
+				<th>Id</th>
+				<th>Title</th>
+				<th>Description</th>
+				<th>Date/Time Added</th>
+				<th>Date/Time Completed</th>
+				<th>Actions</th>
+			</tr>
+		</thead>
+		<tbody>
+			@if (TasketState.Tasket.Count > 0)
+			{
+				foreach (TisketModel tisket in TasketState.Tasket)
+					{
+						<TisketComponent Tisket = "tisket" NotifyOnDelete="StateHasChanged"/>
+					}
+			}
+		</tbody>
+	</table>
+}
+
+@code {
+	private string? rows = null;
+
+	[Parameter] public string Slogan { get; set; } = "";
+}
