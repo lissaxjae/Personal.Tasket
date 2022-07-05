@@ -1,15 +1,12 @@
 ﻿@inject ILogger<TasketComponent> _logger;
-@inject HttpClient Http;
-@inject TasketState TasketState;
 
 <p>@Slogan</p>
 
-<AddTisketComponent NotifyOnAdd="StateHasChanged"/>
-<p>
-	<button type="button" @onclick="TasketState.EmptyTasket">Delete All Data</button>
-</p>
+<AddTisketComponent Tisket="Tisket" AddCallback="Add" />
 
-@if (TasketState.Tasket.Count == 0)
+<p><button type="button" @onclick="ClearData">Delete All Data</button></p>
+
+@if (tasket == null || tasket.Count == 0)
 {
 	<p>Your tasket is empty.</p>
 }
@@ -27,12 +24,9 @@ else
 			</tr>
 		</thead>
 		<tbody>
-			@if (TasketState.Tasket.Count > 0)
+			@foreach (var tisket in tasket)
 			{
-				foreach (TisketModel tisket in TasketState.Tasket)
-					{
-						<TisketComponent Tisket = "tisket" NotifyOnDelete="StateHasChanged"/>
-					}
+				<TisketComponent Tisket="tisket" DeleteCallback="Delete" CompleteCallback="Complete" />
 			}
 		</tbody>
 	</table>
@@ -40,4 +34,57 @@ else
 
 @code {
 	[Parameter] public string Slogan { get; set; } = "";
+
+	List<TisketModel> tasket { get; set; } = new();
+	[Parameter] public TisketModel Tisket { get; set; } = new();
+	[Parameter] public int tisketIdClicked { get; set; }
+	string localStorageKey = "tasket";
+
+	protected override async Task OnInitializedAsync()
+	{
+		tasket = await localStorage.GetItemAsync<List<TisketModel>>(localStorageKey);
+		if (tasket != null)
+			_logger.LogInformation(tasket.Count.ToString());
+	}
+
+	async Task Add()
+	{
+		if (tasket == null)
+		{
+			tasket = new();
+		}
+
+		Tisket.Id = tasket.Count == 0 ? 1 : tasket.Last().Id + 1;
+		tasket.Add(Tisket);
+		await localStorage.SetItemAsync<List<TisketModel>>(localStorageKey, tasket);
+		Tisket = new();
+	}
+
+	public async void Complete(TisketModel tisket)
+	{
+		tisket.IsCompleted = true;
+		tisket.WhenCompleted = DateTime.UtcNow;
+		var completedTisket = tasket.Find(t => t.Id == tisket.Id);
+		if (completedTisket != null)
+		{
+			completedTisket = tisket;
+			await localStorage.SetItemAsync<List<TisketModel>>(localStorageKey, tasket);
+		}
+	}
+
+	public async void Delete(TisketModel tisket)
+	{
+		_logger.LogInformation(tisket.Title);
+		var deleted = tasket.Find(t => t.Id == tisket.Id);
+		if (deleted != null)
+			tasket.Remove(deleted);
+		await localStorage.SetItemAsync<List<TisketModel>>(localStorageKey, tasket);
+		Tisket = new();
+	}
+
+	public async void ClearData()
+	{
+		tasket.Clear();
+		await localStorage.SetItemAsync<List<TisketModel>>(localStorageKey, tasket);
+	}
 }

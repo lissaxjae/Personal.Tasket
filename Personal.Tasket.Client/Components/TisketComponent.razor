@@ -1,29 +1,32 @@
-﻿@inject ILogger<TisketComponent> _logger;
-@inject TasketState TasketState;
-<tr>
+﻿<tr>
 	<td>@Tisket.Id</td>
 	<td>@Tisket.Title</td>
 	<td>@Tisket.Description</td>
-	<td>@Tisket.WhenAdded</td>
-	<td>@Tisket.WhenCompleted</td>
-	<td><a href="#" @onclick="CompleteTisket" @onclick:preventDefault>Mark Complete</a> | <a href="#" @onclick="DeleteTisket" @onclick:preventDefault>Delete</a></td>
+	<td>@Tisket.WhenAdded.ToLocalTime()</td>
+	<td>@CheckNullCompletedDate()</td>
+	<td><a href="#" @onclick="(() => MarkComplete(Tisket))" @onclick:preventDefault>Mark Complete</a> | <a href="#" @onclick="(() => DeleteTisket(Tisket))" @onclick:preventDefault>Delete</a></td>
 </tr>
 
 @code {
 	[Parameter] public TisketModel Tisket { get; set; } = new();
+	[Parameter] public EventCallback<TisketModel> DeleteCallback { get; set; }
+	[Parameter] public EventCallback<TisketModel> CompleteCallback { get; set; }
 
-	[Parameter]public EventCallback NotifyOnDelete { get; set; }
-
-	private async void DeleteTisket()
+	string CheckNullCompletedDate()
 	{
-		await TasketState.DeleteTisket(Tisket);
-		await NotifyOnDelete.InvokeAsync();
+		if (Tisket.WhenCompleted == null)
+			return "";
+		else
+			return Tisket.WhenCompleted.Value.ToLocalTime().ToString();
 	}
 
-	private async void CompleteTisket()
+	async Task DeleteTisket(TisketModel tisket)
 	{
-		await TasketState.CompleteTisket(Tisket);
+		await DeleteCallback.InvokeAsync(tisket);
 	}
 
-	// note - why does DeleteTisket require event invoking, but CompleteTisket does not?
+	async Task MarkComplete(TisketModel tisket)
+	{
+		await CompleteCallback.InvokeAsync(tisket);
+	}
 }
